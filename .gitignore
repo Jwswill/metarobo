@@ -1,0 +1,13 @@
+# 원본 영상 및 추출된 프레임/라벨 (용량이 크고 개인 데이터셋이라 제외)
+driveDataset/
+cap_image/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db

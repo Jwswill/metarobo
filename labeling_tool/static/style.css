@@ -1,0 +1,92 @@
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  height: 100%;
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: #1e1f24;
+  color: #e6e6e6;
+}
+#app { display: flex; flex-direction: column; height: 100vh; }
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 10px 16px;
+  background: #26272e;
+  border-bottom: 1px solid #33343c;
+}
+header h1 { font-size: 16px; margin: 0; color: #fff; white-space: nowrap; }
+.dir-select { display: flex; align-items: center; gap: 6px; }
+.dir-select select {
+  background: #33343c; color: #fff; border: 1px solid #44454f;
+  border-radius: 4px; padding: 5px 8px; min-width: 260px;
+}
+.dir-select button {
+  background: #33343c; color: #fff; border: 1px solid #44454f;
+  border-radius: 4px; padding: 5px 10px; cursor: pointer;
+}
+.progress { margin-left: auto; color: #9aa0ab; font-size: 13px; }
+
+main { flex: 1; display: flex; min-height: 0; }
+
+#sidebar {
+  width: 260px;
+  background: #26272e;
+  border-right: 1px solid #33343c;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.class-panel { padding: 10px; border-bottom: 1px solid #33343c; }
+.class-title, .image-list-title, .box-list-title {
+  font-size: 12px; color: #9aa0ab; text-transform: uppercase;
+  letter-spacing: .04em; padding: 6px 10px;
+}
+.class-btn {
+  display: block; width: 100%; margin: 4px 0; padding: 8px 10px;
+  border-radius: 4px; border: 2px solid var(--c); background: #2c2d34;
+  color: #fff; text-align: left; cursor: pointer; font-size: 13px;
+}
+.class-btn.active { background: var(--c); color: #1e1f24; font-weight: 600; }
+
+#imageList { list-style: none; margin: 0; padding: 0 0 10px; overflow-y: auto; flex: 1; }
+#imageList li {
+  padding: 6px 10px; font-size: 12px; cursor: pointer; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; display: flex; justify-content: space-between; gap: 6px;
+  color: #c7cad1;
+}
+#imageList li:hover { background: #2c2d34; }
+#imageList li.current { background: #3a5f8a; color: #fff; }
+#imageList li .badge { color: #6fcf97; font-size: 11px; }
+#imageList li.empty .badge { color: #555; }
+
+#canvasArea { flex: 1; display: flex; flex-direction: column; min-width: 0; padding: 10px; }
+#canvasWrap {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  background: #101114; border: 1px solid #33343c; border-radius: 6px; overflow: hidden;
+  min-height: 0;
+}
+#canvas { cursor: crosshair; background: #000; max-width: 100%; max-height: 100%; }
+
+#toolbar { display: flex; align-items: center; gap: 10px; padding: 10px 0; }
+#toolbar button {
+  background: #33343c; color: #fff; border: 1px solid #44454f;
+  border-radius: 4px; padding: 6px 12px; cursor: pointer; font-size: 13px;
+}
+#toolbar button:hover { background: #3d3e47; }
+#fileLabel { color: #9aa0ab; font-size: 13px; }
+#statusMsg { margin-left: auto; font-size: 12px; color: #6fcf97; min-height: 16px; }
+
+.box-list-title { padding-left: 0; }
+#boxList { list-style: none; margin: 0; padding: 0; max-height: 110px; overflow-y: auto; }
+#boxList li {
+  display: flex; align-items: center; gap: 8px; padding: 5px 8px;
+  font-size: 12px; border-radius: 4px; cursor: pointer; background: #26272e; margin-bottom: 4px;
+}
+#boxList li.selected { outline: 2px solid #fff; }
+#boxList li .swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+#boxList li button {
+  margin-left: auto; background: #442222; color: #ff9a9a; border: none;
+  border-radius: 3px; padding: 2px 6px; cursor: pointer; font-size: 11px;
+}
