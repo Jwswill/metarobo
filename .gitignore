@@ -2,6 +2,16 @@
 driveDataset/
 cap_image/
 
+# 교육 자료 PDF (용량 크고 벤더 제공 자료라 제외)
+leraning_data/
+
+# YOLO 학습 산출물 (cap_image에서 파생된 개인 데이터셋 + 학습 결과물, 제외)
+yolo_learning/dataset/
+yolo_learning/runs/
+
+# 로봇 전송용 압축 파일 (패키징 산출물, 제외)
+*.zip
+
 # Python
 __pycache__/
 *.pyc

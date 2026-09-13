@@ -52,7 +52,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="영상 -> 프레임 캡처 (라벨링용)")
     parser.add_argument("--input", default="driveDataset", help="영상 디렉터리")
     parser.add_argument("--output", default="cap_image", help="프레임 출력 디렉터리")
-    parser.add_argument("--fps", type=float, default=5.0, help="초당 캡처할 프레임 수")
+    parser.add_argument("--fps", type=float, default=30.0, help="초당 캡처할 프레임 수")
     parser.add_argument("--force", action="store_true", help="이미 추출된 영상도 다시 추출")
     args = parser.parse_args()
 
