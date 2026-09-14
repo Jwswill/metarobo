@@ -10,6 +10,8 @@ import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
+from PIL import Image, ImageOps
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CAP_IMAGE_DIR = os.path.join(ROOT, "cap_image")
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
@@ -62,6 +64,53 @@ def list_images(dir_name: str):
                 box_count = 0
         out.append({"name": f, "labeled": os.path.exists(json_path), "box_count": box_count})
     return out
+
+
+def rotate_image_and_annotation(dir_name: str, image_name: str, direction: str):
+    """이미지 파일을 90도 회전시켜 덮어쓰고, 있으면 라벨(json)의 bbox도 같이 회전시킨다.
+
+    폰카메라로 찍은 사진은 EXIF orientation 태그로 "이렇게 돌려서 보라"고만 표시되고
+    실제 픽셀 데이터는 회전 전 상태로 저장돼 있는 경우가 많다(예: 가로 4000x3000 픽셀 +
+    orientation=6 -> 브라우저/라벨 데이터상으로는 세로 3000x4000로 보임).
+    그래서 먼저 exif_transpose로 "실제 보이는 대로"의 픽셀 배치로 맞춘 뒤에 추가 회전을 적용해야
+    기존에 저장된 bbox(x_center, y_center, width, height, 0~1 정규화)와 어긋나지 않는다.
+    """
+    if direction not in ("cw", "ccw"):
+        raise ValueError("invalid direction")
+
+    image_path = os.path.join(CAP_IMAGE_DIR, dir_name, "image", image_name)
+    if not os.path.isfile(image_path):
+        raise ValueError("image not found")
+
+    img = ImageOps.exif_transpose(Image.open(image_path))
+    rotate_op = Image.Transpose.ROTATE_270 if direction == "cw" else Image.Transpose.ROTATE_90
+    rotated = img.transpose(rotate_op)
+    new_w, new_h = rotated.size
+
+    if rotated.mode != "RGB":
+        rotated = rotated.convert("RGB")
+    rotated.save(image_path, quality=95)
+
+    stem = os.path.splitext(image_name)[0]
+    json_path = os.path.join(CAP_IMAGE_DIR, dir_name, "json", stem + ".json")
+    if os.path.exists(json_path):
+        with open(json_path, "r", encoding="utf-8") as f:
+            record = json.load(f)
+        for ann in record.get("annotations", []):
+            bbox = ann["bbox"]
+            cx, cy = bbox["x_center"], bbox["y_center"]
+            w, h = bbox["width"], bbox["height"]
+            if direction == "cw":
+                bbox["x_center"], bbox["y_center"] = 1 - cy, cx
+            else:
+                bbox["x_center"], bbox["y_center"] = cy, 1 - cx
+            bbox["width"], bbox["height"] = h, w
+        record["width"] = new_w
+        record["height"] = new_h
+        with open(json_path, "w", encoding="utf-8") as f:
+            json.dump(record, f, ensure_ascii=False, indent=2)
+
+    return {"ok": True, "width": new_w, "height": new_h}
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -144,6 +193,9 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         parsed = urlparse(self.path)
+        if parsed.path == "/api/rotate":
+            self._handle_rotate()
+            return
         if parsed.path != "/api/annotation":
             self._send_error_json("unknown endpoint", 404)
             return
@@ -177,6 +229,25 @@ class Handler(BaseHTTPRequestHandler):
                 json.dump(record, f, ensure_ascii=False, indent=2)
 
             self._send_json({"ok": True})
+        except ValueError as e:
+            self._send_error_json(str(e), 400)
+        except Exception as e:  # noqa: BLE001
+            self._send_error_json(str(e), 500)
+
+    def _handle_rotate(self):
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+            raw = self.rfile.read(length)
+            payload = json.loads(raw.decode("utf-8"))
+
+            dir_name = safe_dir_name(payload.get("dir", ""))
+            image_name = payload.get("image", "")
+            if not image_name or "/" in image_name or "\\" in image_name:
+                raise ValueError("invalid image name")
+            direction = payload.get("direction", "cw")
+
+            result = rotate_image_and_annotation(dir_name, image_name, direction)
+            self._send_json(result)
         except ValueError as e:
             self._send_error_json(str(e), 400)
         except Exception as e:  # noqa: BLE001

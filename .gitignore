@@ -12,6 +12,11 @@ yolo_learning/runs/
 # 로봇 전송용 압축 파일 (패키징 산출물, 제외)
 *.zip
 
+# Hailo Dataflow Compiler (500MB+ 벤더 배포 wheel + 실행 시 생성되는 런타임 로그)
+hailo/*.whl
+.install_logs/
+*.log
+
 # Python
 __pycache__/
 *.pyc

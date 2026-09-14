@@ -13,6 +13,8 @@ const statusMsg = document.getElementById("statusMsg");
 const prevBtn = document.getElementById("prevBtn");
 const nextBtn = document.getElementById("nextBtn");
 const saveBtn = document.getElementById("saveBtn");
+const rotateCwBtn = document.getElementById("rotateCwBtn");
+const rotateCcwBtn = document.getElementById("rotateCcwBtn");
 const classBtns = Array.from(document.querySelectorAll(".class-btn"));
 
 let state = {
@@ -260,6 +262,32 @@ window.addEventListener("mouseup", () => {
   draw();
 });
 
+async function rotateCurrent(direction) {
+  if (state.index < 0) return;
+  if (state.dirty) {
+    const ok = confirm("저장하지 않은 변경사항이 있습니다. 회전 전에 저장할까요?");
+    if (ok) await saveCurrent(true);
+  }
+  const image = state.images[state.index];
+  setStatus("회전 중...", 0);
+  try {
+    const res = await fetch("/api/rotate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dir: state.dir, image: image.name, direction }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      setStatus(`회전 실패: ${err.error || res.status}`, 3000);
+      return;
+    }
+    setStatus("회전 완료 (원본 파일 덮어씀)");
+    await loadImage(state.index); // 회전된 이미지 + 변환된 라벨을 서버에서 다시 불러옴
+  } catch (e) {
+    setStatus("회전 실패", 3000);
+  }
+}
+
 function setCurrentClass(idx) {
   state.currentClass = idx;
   classBtns.forEach((b, i) => b.classList.toggle("active", i === idx));
@@ -277,6 +305,8 @@ setCurrentClass(0);
 prevBtn.addEventListener("click", () => loadImage(state.index - 1));
 nextBtn.addEventListener("click", () => loadImage(state.index + 1));
 saveBtn.addEventListener("click", () => saveCurrent(true));
+rotateCwBtn.addEventListener("click", () => rotateCurrent("cw"));
+rotateCcwBtn.addEventListener("click", () => rotateCurrent("ccw"));
 dirSelect.addEventListener("change", () => loadImages(dirSelect.value));
 refreshDirsBtn.addEventListener("click", () => loadDirs(dirSelect.value));
 
@@ -290,6 +320,8 @@ window.addEventListener("keydown", (evt) => {
   else if (evt.key === "a" || evt.key === "A" || evt.key === "ArrowLeft") loadImage(state.index - 1);
   else if (evt.key === "d" || evt.key === "D" || evt.key === "ArrowRight") loadImage(state.index + 1);
   else if (evt.key === "s" || evt.key === "S") { evt.preventDefault(); saveCurrent(true); }
+  else if (evt.key === "R") { evt.preventDefault(); rotateCurrent("ccw"); }
+  else if (evt.key === "r") { evt.preventDefault(); rotateCurrent("cw"); }
   else if (evt.key === "Delete" || evt.key === "Backspace") {
     if (state.selected >= 0) { evt.preventDefault(); removeBox(state.selected); }
   }
